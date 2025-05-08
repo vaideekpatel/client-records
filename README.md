@@ -74,6 +74,5 @@ The application meets all of the original task requirements:
 npm run test
 ```
 
-Covers utility functions, slice reducers, and core UI components.
-
+Vaideek Patel.
 ---

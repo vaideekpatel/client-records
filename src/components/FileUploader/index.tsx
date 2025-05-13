@@ -6,19 +6,28 @@ import { toast } from 'react-toastify';
 
 const FileUploader: React.FC = () => {
   const dispatch = useAppDispatch();
-  const existingRecords = useAppSelector(state => state.records.records);
+  const existingRecords = useAppSelector((state) => state.records.records);
 
   const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = event => {
+    reader.onload = (event) => {
       try {
         const parsed = JSON.parse(event.target?.result as string) as ClientRecord[];
 
-        const existingEmails = new Set(existingRecords.map(r => r.email));
-        const hasDuplicate = parsed.some(r => existingEmails.has(r.email));
+        const hasEmptyEmail = parsed.some(
+          (r) => !r.email || typeof r.email !== 'string' || r.email.trim() === '',
+        );
+
+        if (hasEmptyEmail) {
+          toast.error('Upload failed: One or more records are missing valid email addresses.');
+          return;
+        }
+
+        const existingEmails = new Set(existingRecords.map((r) => r.email));
+        const hasDuplicate = parsed.some((r) => existingEmails.has(r.email));
 
         if (hasDuplicate) {
           toast.error('Upload failed: One or more emails already exist in the current list.');

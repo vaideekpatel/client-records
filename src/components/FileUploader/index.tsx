@@ -1,11 +1,12 @@
 import React, { type ChangeEvent } from 'react';
-import { useAppDispatch } from '../../hooks/useTypedHooks';
+import { useAppDispatch, useAppSelector } from '../../hooks/useTypedHooks';
 import { mergeRecords } from '../../store/recordsSlice';
 import type { ClientRecord } from '../../types/ClientRecord';
 import { toast } from 'react-toastify';
 
 const FileUploader: React.FC = () => {
   const dispatch = useAppDispatch();
+  const existingRecords = useAppSelector(state => state.records.records);
 
   const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -15,12 +16,22 @@ const FileUploader: React.FC = () => {
     reader.onload = event => {
       try {
         const parsed = JSON.parse(event.target?.result as string) as ClientRecord[];
+
+        const existingEmails = new Set(existingRecords.map(r => r.email));
+        const hasDuplicate = parsed.some(r => existingEmails.has(r.email));
+
+        if (hasDuplicate) {
+          toast.error('Upload failed: One or more emails already exist in the current list.');
+          return;
+        }
+
         dispatch(mergeRecords(parsed));
         toast.success(`Imported ${parsed.length} records!`);
       } catch {
         alert('Invalid JSON. Please upload a valid JSON file.');
       }
     };
+
     reader.readAsText(file);
     e.target.value = '';
   };

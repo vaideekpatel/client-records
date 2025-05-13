@@ -10,13 +10,9 @@ interface RecordFormModalProps {
   onClose: () => void;
 }
 
-const RecordFormModal: React.FC<RecordFormModalProps> = ({
-  isOpen,
-  initialRecord,
-  onClose,
-}) => {
+const RecordFormModal: React.FC<RecordFormModalProps> = ({ isOpen, initialRecord, onClose }) => {
   const dispatch = useAppDispatch();
-  const records = useAppSelector(state => state.records.records);
+  const records = useAppSelector((state) => state.records.records);
 
   // Local form state
   const [formData, setFormData] = useState({
@@ -34,27 +30,37 @@ const RecordFormModal: React.FC<RecordFormModalProps> = ({
   }, [isOpen, initialRecord]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = () => {
     const { name, email } = formData;
-    if (!name.trim() || !email.trim()) {
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!trimmedName || !trimmedEmail) {
       setError('Name and Email are required.');
       return;
     }
-    // Ensure email is unique among other records
-    if (!isEmailUnique(records, email.trim(), initialRecord.id)) {
+
+    if (!emailRegex.test(trimmedEmail)) {
+      setError('Please enter a valid email format.');
+      return;
+    }
+
+    if (!isEmailUnique(records, trimmedEmail, initialRecord.id)) {
       setError('Email must be unique.');
       return;
     }
-    // Dispatch update
+
     dispatch(
       updateRecord({
         ...initialRecord,
-        name: name.trim(),
-        email: email.trim(),
-      })
+        name: trimmedName,
+        email: trimmedEmail,
+      }),
     );
     onClose();
   };
